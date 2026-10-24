@@ -20,7 +20,7 @@ try {
 $router = new Router();
 
 // ================= Rutas Web (SPA Vue.js 3) =================
-$serveSpa = function () {
+$serveSpa = function (...$args) {
     $spaIndex = __DIR__ . '/dist/index.html';
     if (file_exists($spaIndex)) {
         header('Content-Type: text/html; charset=utf-8');

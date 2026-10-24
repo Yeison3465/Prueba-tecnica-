@@ -94,7 +94,12 @@ class Router
     private function executeHandler($handler, array $params): void
     {
         if (is_callable($handler)) {
-            call_user_func_array($handler, $params);
+            $ref = new \ReflectionFunction(\Closure::fromCallable($handler));
+            if ($ref->getNumberOfParameters() === 0) {
+                $handler();
+            } else {
+                call_user_func_array($handler, $params);
+            }
             return;
         }
 
