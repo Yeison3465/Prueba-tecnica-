@@ -71,6 +71,16 @@ class Router
             }
         }
 
+        // Si es una petición GET de página web y existe la SPA compilada, servir SPA (Vue Router history mode)
+        if ($method === 'GET' && !str_starts_with($uri, '/api/')) {
+            $spaFile = __DIR__ . '/../../public/dist/index.html';
+            if (file_exists($spaFile)) {
+                header('Content-Type: text/html; charset=utf-8');
+                readfile($spaFile);
+                exit;
+            }
+        }
+
         // Si no coincide ninguna ruta
         http_response_code(404);
         if (str_starts_with($uri, '/api/')) {

@@ -1,6 +1,25 @@
+# Dependencias de Backend y Frontend
 /vendor/
+node_modules/
+/frontend/node_modules/
+
+# Archivos de datos temporales o pesados
 /bd/unspcs.xlsx
+
+# Subidas de usuario (mantener solo .gitkeep)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Logs y entorno
 *.log
 .env
+.env.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operativo y editores
 .DS_Store
 Thumbs.db
+.vscode/
+.idea/

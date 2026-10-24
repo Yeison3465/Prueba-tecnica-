@@ -1,0 +1,158 @@
+<template>
+  <div class="modal fade" id="modalDocVue" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true" ref="modalRef">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-light">
+          <h5 class="modal-title fw-bold text-dark" id="modalLabel">
+            <i class="fa-solid fa-file-circle-plus text-primary me-2"></i>
+            Agregar Documento
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <form @submit.prevent="subirDocumento">
+          <div class="modal-body p-4">
+            <div class="mb-3">
+              <label class="form-label">Título del Documento <span class="text-danger">*</span></label>
+              <input type="text" 
+                     v-model="titulo" 
+                     maxlength="100" 
+                     class="form-control" 
+                     placeholder="Ej. Términos de Referencia" 
+                     required />
+              <div class="form-text small">Texto registrado (Máx 100 caracteres).</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Descripción Corta <span class="text-danger">*</span></label>
+              <textarea v-model="descripcion" 
+                        maxlength="200" 
+                        rows="2" 
+                        class="form-control" 
+                        placeholder="Breve descripción del archivo..." 
+                        required></textarea>
+              <div class="form-text small">Descripción corta (Máx 200 caracteres).</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Archivo Adjunto <span class="text-danger">*</span></label>
+              <input type="file" 
+                     ref="fileInputRef"
+                     @change="handleFile" 
+                     class="form-control" 
+                     accept=".pdf,.zip" 
+                     required />
+              <div class="form-text small text-primary fw-semibold">
+                <i class="fa-solid fa-circle-info me-1"></i> Formatos admitidos: Solo <b>PDF</b> o <b>ZIP</b>.
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" 
+                    class="btn btn-suplos btn-sm d-flex align-items-center gap-2" 
+                    :disabled="!isValid || uploading">
+              <i v-if="uploading" class="fa-solid fa-spinner fa-spin"></i>
+              <i v-else class="fa-solid fa-plus"></i>
+              <span>{{ uploading ? 'Subiendo...' : 'Agregar al Listado' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import api from '../services/api';
+import Swal from 'sweetalert2';
+
+const props = defineProps({
+  ofertaId: {
+    type: [Number, String],
+    required: true,
+  },
+});
+
+const emit = defineEmits(['documento-agregado']);
+
+const titulo = ref('');
+const descripcion = ref('');
+const archivo = ref(null);
+const uploading = ref(false);
+const fileInputRef = ref(null);
+
+const isValid = computed(() => {
+  return titulo.value.trim().length > 0 &&
+         descripcion.value.trim().length > 0 &&
+         archivo.value !== null;
+});
+
+const handleFile = (e) => {
+  const files = e.target.files;
+  if (!files.length) return;
+  const file = files[0];
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if (!['pdf', 'zip'].includes(ext)) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Formato no permitido',
+      text: 'Solo se permiten archivos en formato PDF o ZIP.',
+    });
+    e.target.value = '';
+    archivo.value = null;
+    return;
+  }
+
+  archivo.value = file;
+};
+
+const subirDocumento = async () => {
+  if (!isValid.value) return;
+
+  uploading.value = true;
+  const formData = new FormData();
+  formData.append('titulo', titulo.value.trim());
+  formData.append('descripcion', descripcion.value.trim());
+  formData.append('archivo', archivo.value);
+
+  try {
+    const res = await api.post(`/ofertas/${props.ofertaId}/documentos`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    if (res.data.success) {
+      emit('documento-agregado', res.data.data);
+      
+      // Limpiar campos
+      titulo.value = '';
+      descripcion.value = '';
+      archivo.value = null;
+      if (fileInputRef.value) fileInputRef.value.value = '';
+
+      // Cerrar modal
+      const modalEl = document.getElementById('modalDocVue');
+      const modal = window.bootstrap?.Modal?.getInstance(modalEl);
+      if (modal) modal.hide();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Documento agregado',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    }
+  } catch (err) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err.response?.data?.message || 'Error al subir el documento.',
+    });
+  } finally {
+    uploading.value = false;
+  }
+};
+</script>

@@ -19,12 +19,30 @@ try {
 
 $router = new Router();
 
-// ================= Rutas Web (Vistas) =================
-$router->get('/', 'OfertaController@index');
-$router->get('/ofertas', 'OfertaController@index');
-$router->get('/ofertas/crear', 'OfertaController@create');
-$router->get('/ofertas/editar/{id}', 'OfertaController@edit');
-$router->get('/ofertas/detalle/{id}', 'OfertaController@show');
+// ================= Rutas Web (SPA Vue.js 3 o Vistas PHP) =================
+$spaIndex = __DIR__ . '/dist/index.html';
+$serveSpa = function () use ($spaIndex) {
+    if (file_exists($spaIndex)) {
+        header('Content-Type: text/html; charset=utf-8');
+        readfile($spaIndex);
+        exit;
+    }
+};
+
+if (file_exists($spaIndex)) {
+    $router->get('/', $serveSpa);
+    $router->get('/ofertas', $serveSpa);
+    $router->get('/ofertas/crear', $serveSpa);
+    $router->get('/ofertas/editar/{id}', $serveSpa);
+    $router->get('/ofertas/detalle/{id}', $serveSpa);
+} else {
+    $router->get('/', 'OfertaController@index');
+    $router->get('/ofertas', 'OfertaController@index');
+    $router->get('/ofertas/crear', 'OfertaController@create');
+    $router->get('/ofertas/editar/{id}', 'OfertaController@edit');
+    $router->get('/ofertas/detalle/{id}', 'OfertaController@show');
+}
+
 $router->get('/ofertas/exportar-excel', 'ReporteController@exportarExcel');
 $router->get('/ofertas/{id}/documentos/{docId}/descargar', 'OfertaController@downloadDocumento');
 
