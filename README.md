@@ -28,48 +28,53 @@
 ## 📂 Estructura del Proyecto
 
 ```text
-├── app/
+├── frontend/                        # Frontend Reactivo en Vue.js 3 (Single File Components)
+│   ├── package.json                 # Dependencias: vue, vue-router, axios, bootstrap
+│   ├── vite.config.js               # Configuración Vite con salida a public/dist/
+│   ├── index.html                   # HTML base de la SPA Vue
+│   └── src/
+│       ├── main.js                  # Punto de entrada de Vue 3
+│       ├── App.vue                  # Componente raíz con layout y Navbar
+│       ├── router/index.js          # Rutas cliente (Listado, Crear, Editar, Detalle)
+│       ├── services/api.js          # Cliente Axios conectado al backend REST
+│       ├── components/
+│       │   ├── Navbar.vue           # Barra de navegación corporativa
+│       │   └── ModalDocumento.vue   # Modal de carga de documentos PDF o ZIP
+│       └── views/
+│           ├── ListadoOfertas.vue   # [Vista .vue] Filtros en vivo, tabla y paginación
+│           ├── CrearOferta.vue      # [Vista .vue] Sección 1 y 2 con contadores y validaciones
+│           ├── EditarOferta.vue     # [Vista .vue] Precarga y Sección 3 con documentos
+│           └── DetalleOferta.vue    # [Vista .vue] Vista consolidada con pestañas (Tabs)
+├── app/                             # Backend PHP MVC (Sin frameworks)
 │   ├── Controllers/
-│   │   ├── BaseController.php       # Respuestas JSON normalizadas y render de vistas
-│   │   ├── OfertaController.php     # Lógica CRUD, validaciones y subida de archivos
-│   │   ├── ActividadController.php  # API para listar actividades del clasificador UNSPSC
+│   │   ├── BaseController.php       # Respuestas JSON normalizadas y helpers
+│   │   ├── OfertaController.php     # API CRUD, validaciones y subida de archivos
+│   │   ├── ActividadController.php  # API para listar actividades UNSPSC
 │   │   └── ReporteController.php    # Exportación nativa a Excel (.xlsx) sin paginar
 │   ├── Core/
-│   │   ├── Router.php               # Enrutador HTTP liviano con soporte de parámetros y métodos
+│   │   ├── Router.php               # Enrutador HTTP REST con fallback SPA
 │   │   ├── Database.php             # Configuración e inicio de Eloquent Capsule
 │   │   └── Validator.php            # Reglas de negocio y validaciones del backend
 │   ├── Models/
-│   │   ├── Oferta.php               # Modelo Eloquent con relaciones a actividad y documentos
+│   │   ├── Oferta.php               # Modelo Eloquent con relaciones
 │   │   ├── Actividad.php            # Modelo Eloquent para el clasificador UNSPSC
 │   │   └── OfertaDocumento.php      # Modelo Eloquent para los archivos adjuntos
 │   └── Helpers/
 │       └── ConsecutivoHelper.php    # Generador automático del consecutivo PO-0001-YY
 ├── bd/
-│   ├── schema.sql                   # Estructura DDL de base de datos e índices
-│   ├── actividades_seed.sql         # Seed con casi 3,000 actividades reales UNSPSC
+│   ├── schema.sql                   # Estructura DDL de base de datos e índices seguros
+│   ├── actividades_seed.sql         # Seed con 2,994 actividades reales UNSPSC
 │   └── import_unspsc.php            # Script PHP de importación desde el Excel de Storyblok
 ├── config/
-│   └── database.php                 # Parámetros de conexión a la base de datos
-├── public/
-│   ├── assets/
-│   │   ├── css/app.css              # Estilos corporativos Suplos
-│   │   └── js/
-│   │       ├── listado-ofertas.js   # Vue: búsqueda en tiempo real, filtros y paginación
-│   │       ├── form-oferta.js       # Vue: contadores de caracteres, validación cruzada y documentos
-│   │       └── detalle-oferta.js    # Vue: vista consolidada con pestañas (Tabs)
+│   └── database.php                 # Parámetros de conexión a la base de datos MySQL
+├── public/                          # Directorio público servido por PHP
+│   ├── dist/                        # Bundle optimizado generado por Vite (.js, .css)
 │   ├── uploads/                     # Almacenamiento seguro de archivos PDF y ZIP
 │   ├── .htaccess                    # Reglas mod_rewrite para servidores Apache
 │   └── index.php                    # Front Controller (Punto de entrada único)
-├── views/
-│   ├── layouts/
-│   │   ├── header.php               # Estructura HTML común, Bootstrap 5, FontAwesome y Vue 3
-│   │   └── footer.php               # Cierre de vistas y scripts globales
-│   └── ofertas/
-│       ├── index.php                # Vista de listado
-│       ├── create.php               # Formulario de creación (Info Básica + Cronograma)
-│       ├── edit.php                 # Formulario de edición (+ Sección de Documentos)
-│       └── show.php                 # Vista de detalle con navegación por pestañas
-├── composer.json                    # Declaración de dependencias del proyecto
+├── tests/
+│   └── test_validator.php           # Suite de pruebas unitarias de validaciones
+├── composer.json                    # Dependencias de backend (Eloquent, PhpSpreadsheet)
 └── README.md                        # Documentación e instrucciones de instalación
 ```
 

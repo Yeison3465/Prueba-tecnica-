@@ -16,15 +16,7 @@ class OfertaController extends BaseController
         $this->validator = new Validator();
     }
 
-    /**
-     * Vista principal: Listado de ofertas.
-     */
-    public function index(): void
-    {
-        $this->renderView('ofertas/index', [
-            'pageTitle' => 'Listado de Ofertas'
-        ]);
-    }
+
 
     /**
      * API JSON: Listado de ofertas con filtros y paginación.
@@ -67,15 +59,7 @@ class OfertaController extends BaseController
         ]);
     }
 
-    /**
-     * Vista: Formulario de Creación de Oferta.
-     */
-    public function create(): void
-    {
-        $this->renderView('ofertas/create', [
-            'pageTitle' => 'Crear Nueva Oferta'
-        ]);
-    }
+
 
     /**
      * API JSON: Guardar nueva oferta con consecutivo automático.
@@ -123,27 +107,7 @@ class OfertaController extends BaseController
         }
     }
 
-    /**
-     * Vista: Formulario de Edición de Oferta.
-     */
-    public function edit(int|string $id): void
-    {
-        $this->renderView('ofertas/edit', [
-            'pageTitle' => 'Editar Oferta',
-            'ofertaId'  => intval($id)
-        ]);
-    }
 
-    /**
-     * Vista: Detalle de Oferta organizado por pestañas.
-     */
-    public function show(int|string $id): void
-    {
-        $this->renderView('ofertas/show', [
-            'pageTitle' => 'Detalle de la Oferta',
-            'ofertaId'  => intval($id)
-        ]);
-    }
 
     /**
      * API JSON: Obtener datos completos de una oferta por ID.

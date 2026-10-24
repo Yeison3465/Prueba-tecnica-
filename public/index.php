@@ -19,29 +19,24 @@ try {
 
 $router = new Router();
 
-// ================= Rutas Web (SPA Vue.js 3 o Vistas PHP) =================
-$spaIndex = __DIR__ . '/dist/index.html';
-$serveSpa = function () use ($spaIndex) {
+// ================= Rutas Web (SPA Vue.js 3) =================
+$serveSpa = function () {
+    $spaIndex = __DIR__ . '/dist/index.html';
     if (file_exists($spaIndex)) {
         header('Content-Type: text/html; charset=utf-8');
         readfile($spaIndex);
         exit;
     }
+    http_response_code(500);
+    echo "<h1>Por favor compile el frontend ejecutando: cd frontend && npm run build</h1>";
+    exit;
 };
 
-if (file_exists($spaIndex)) {
-    $router->get('/', $serveSpa);
-    $router->get('/ofertas', $serveSpa);
-    $router->get('/ofertas/crear', $serveSpa);
-    $router->get('/ofertas/editar/{id}', $serveSpa);
-    $router->get('/ofertas/detalle/{id}', $serveSpa);
-} else {
-    $router->get('/', 'OfertaController@index');
-    $router->get('/ofertas', 'OfertaController@index');
-    $router->get('/ofertas/crear', 'OfertaController@create');
-    $router->get('/ofertas/editar/{id}', 'OfertaController@edit');
-    $router->get('/ofertas/detalle/{id}', 'OfertaController@show');
-}
+$router->get('/', $serveSpa);
+$router->get('/ofertas', $serveSpa);
+$router->get('/ofertas/crear', $serveSpa);
+$router->get('/ofertas/editar/{id}', $serveSpa);
+$router->get('/ofertas/detalle/{id}', $serveSpa);
 
 $router->get('/ofertas/exportar-excel', 'ReporteController@exportarExcel');
 $router->get('/ofertas/{id}/documentos/{docId}/descargar', 'OfertaController@downloadDocumento');
