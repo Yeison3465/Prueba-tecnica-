@@ -1,0 +1,6 @@
+/vendor/
+/bd/unspcs.xlsx
+*.log
+.env
+.DS_Store
+Thumbs.db
