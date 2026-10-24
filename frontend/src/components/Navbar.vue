@@ -22,18 +22,11 @@
         </button>
         
         <div class="collapse navbar-collapse" id="navbarVue">
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-2">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
             <li class="nav-item">
               <router-link class="nav-link nav-link-minimal px-3 py-2" to="/ofertas" active-class="active">
                 <i class="fa-solid fa-list-check me-1 small"></i>
-                <span>Listado de Licitaciones</span>
-              </router-link>
-            </li>
-            
-            <li class="nav-item ms-lg-2">
-              <router-link class="btn btn-suplos-cyan btn-sm px-3 py-2 shadow-none d-flex align-items-center gap-2" to="/ofertas/crear">
-                <i class="fa-solid fa-plus small"></i>
-                <span>Nueva Oferta</span>
+                <span>Licitaciones</span>
               </router-link>
             </li>
           </ul>

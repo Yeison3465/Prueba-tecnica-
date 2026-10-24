@@ -19,7 +19,7 @@
         </button>
         <router-link to="/ofertas/crear" class="btn btn-suplos-cyan d-flex align-items-center gap-2 shadow-none">
           <i class="fa-solid fa-plus small"></i>
-          <span>Crear Licitación</span>
+          <span>Nueva Oferta</span>
         </router-link>
       </div>
     </div>
