@@ -13,13 +13,6 @@
           <span class="text-secondary opacity-50">|</span>
           <span class="fw-normal">Gestión de Licitaciones y Ofertas &copy; {{ new Date().getFullYear() }}</span>
         </div>
-        <div class="d-flex align-items-center gap-3">
-          <div class="d-flex align-items-center gap-2">
-            <span class="status-indicator"></span>
-            <span class="text-secondary small">Sistema Operativo</span>
-          </div>
-          <span class="badge badge-tech">Vue.js 3 + Bootstrap 5</span>
-        </div>
       </div>
     </footer>
   </div>
