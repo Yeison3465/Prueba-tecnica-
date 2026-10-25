@@ -116,8 +116,11 @@
                 <div class="card border p-3 rounded-3">
                   <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
                     <span class="text-muted small">Estado de licitación:</span>
-                    <span class="badge rounded-pill fw-semibold px-3 py-1" style="background-color: #ecfdf5; color: #059669; border: 1px solid #d1fae5;">
-                      ● {{ oferta.estado }}
+                    <span class="badge rounded-pill fw-semibold px-3 py-1"
+                          :style="estadoActual === 'Cerrada' 
+                            ? 'background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca;' 
+                            : 'background-color: #ecfdf5; color: #059669; border: 1px solid #d1fae5;'">
+                      ● {{ estadoActual }}
                     </span>
                   </div>
                   <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
@@ -162,6 +165,9 @@
                       <div class="text-uppercase small fw-bold text-muted" style="font-size: 0.72rem;">Cierre de Convocatoria</div>
                       <div class="fs-4 fw-bold text-danger">{{ formatearFecha(oferta.fecha_cierre) }}</div>
                       <div class="text-muted small">Hora límite: <strong class="text-dark">{{ oferta.hora_cierre }}</strong></div>
+                      <span v-if="estaVencida" class="badge bg-danger mt-1 small">
+                        <i class="fa-solid fa-lock me-1"></i> Convocatoria Cerrada
+                      </span>
                     </div>
                   </div>
                   <p class="small text-muted mb-0">Vencimiento del plazo para la entrega formal de documentación requerida.</p>
@@ -230,7 +236,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
 import Swal from 'sweetalert2';
@@ -246,6 +252,24 @@ const router = useRouter();
 const oferta = ref(null);
 const loading = ref(true);
 const activeTab = ref('info');
+
+const ahora = ref(new Date());
+let timerAhora = null;
+
+const estadoActual = computed(() => {
+  if (!oferta.value) return '';
+  if (oferta.value.estado === 'Publicada' && oferta.value.fecha_cierre && oferta.value.hora_cierre) {
+    const fecha = oferta.value.fecha_cierre.split('T')[0];
+    const hora = oferta.value.hora_cierre.length === 5 ? oferta.value.hora_cierre + ':00' : oferta.value.hora_cierre.substring(0, 8);
+    const limite = new Date(`${fecha}T${hora}`);
+    if (!isNaN(limite) && ahora.value >= limite) {
+      return 'Cerrada';
+    }
+  }
+  return oferta.value.estado;
+});
+
+const estaVencida = computed(() => estadoActual.value === 'Cerrada');
 
 const cargarDetalle = async () => {
   loading.value = true;
@@ -292,6 +316,15 @@ const formatearFechaHora = (str) => {
 
 onMounted(() => {
   cargarDetalle();
+  timerAhora = setInterval(() => {
+    ahora.value = new Date();
+  }, 3000);
+});
+
+onUnmounted(() => {
+  if (timerAhora) {
+    clearInterval(timerAhora);
+  }
 });
 </script>
 

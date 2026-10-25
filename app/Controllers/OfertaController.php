@@ -24,6 +24,8 @@ class OfertaController extends BaseController
      */
     public function apiList(): void
     {
+        Oferta::sincronizarEstadosCierre();
+
         $consecutivo = trim($_GET['consecutivo'] ?? '');
         $objeto      = trim($_GET['objeto'] ?? '');
         $descripcion = trim($_GET['descripcion'] ?? '');
@@ -93,6 +95,12 @@ class OfertaController extends BaseController
                         // Generar consecutivo dentro de la transacción con bloqueo pesimista
                         $consecutivo = ConsecutivoHelper::generar('PO', true);
 
+                        $estadoInicial = $data['estado'] ?? 'Publicada';
+                        $cierreTs = strtotime("{$data['fecha_cierre']} {$data['hora_cierre']}");
+                        if ($estadoInicial === 'Publicada' && $cierreTs !== false && $cierreTs <= time()) {
+                            $estadoInicial = 'Cerrada';
+                        }
+
                         return Oferta::create([
                             'consecutivo'   => $consecutivo,
                             'objeto'        => trim($data['objeto']),
@@ -104,7 +112,7 @@ class OfertaController extends BaseController
                             'hora_inicio'   => $data['hora_inicio'],
                             'fecha_cierre'  => $data['fecha_cierre'],
                             'hora_cierre'   => $data['hora_cierre'],
-                            'estado'        => $data['estado'] ?? 'Publicada',
+                            'estado'        => $estadoInicial,
                         ]);
                     } finally {
                         if ($isMysql) {
@@ -157,6 +165,8 @@ class OfertaController extends BaseController
      */
     public function apiGet(int|string $id): void
     {
+        Oferta::sincronizarEstadosCierre();
+
         $oferta = Oferta::with(['actividad', 'documentos'])->find($id);
 
         if (!$oferta) {
@@ -177,6 +187,8 @@ class OfertaController extends BaseController
      */
     public function update(int|string $id): void
     {
+        Oferta::sincronizarEstadosCierre();
+
         $oferta = Oferta::with('documentos')->find($id);
 
         if (!$oferta) {
@@ -223,7 +235,12 @@ class OfertaController extends BaseController
             $oferta->fecha_cierre = $data['fecha_cierre'];
             $oferta->hora_cierre  = $data['hora_cierre'];
             if (!empty($data['estado'])) {
-                $oferta->estado = $data['estado'];
+                $cierreTs = strtotime("{$data['fecha_cierre']} {$data['hora_cierre']}");
+                if ($data['estado'] === 'Publicada' && $cierreTs !== false && $cierreTs <= time()) {
+                    $oferta->estado = 'Cerrada';
+                } else {
+                    $oferta->estado = $data['estado'];
+                }
             }
             $oferta->save();
 

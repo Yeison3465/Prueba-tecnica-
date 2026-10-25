@@ -97,6 +97,8 @@ class Validator
                 $this->errors['hora_cierre'] = 'Si la fecha de cierre es igual a la fecha de inicio, la hora de cierre debe ser mayor a la hora de inicio.';
             } elseif ($cierreTimestamp <= $inicioTimestamp) {
                 $this->errors['hora_cierre'] = 'La fecha y hora de cierre deben ser posteriores a la fecha y hora de inicio.';
+            } elseif (!$isUpdate && $cierreTimestamp <= time()) {
+                $this->errors['hora_cierre'] = 'La fecha y hora de cierre deben ser posteriores al momento actual.';
             }
         }
 

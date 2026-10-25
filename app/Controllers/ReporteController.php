@@ -21,6 +21,8 @@ class ReporteController extends BaseController
         $objeto      = trim($_GET['objeto'] ?? '');
         $descripcion = trim($_GET['descripcion'] ?? '');
 
+        Oferta::sincronizarEstadosCierre();
+
         $query = Oferta::with('actividad')->orderBy('id', 'desc');
 
         if ($consecutivo !== '') {

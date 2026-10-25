@@ -33,6 +33,14 @@
     </div>
 
     <form v-else @submit.prevent="actualizarOferta" novalidate>
+      <!-- Alerta informativa si la oferta está cerrada -->
+      <div v-if="form.estado === 'Cerrada'" class="alert alert-danger border-0 bg-danger-subtle d-flex align-items-center gap-2 mb-4 py-2 px-3 rounded-3">
+        <i class="fa-solid fa-lock text-danger"></i>
+        <span class="small fw-semibold text-danger">
+          Esta oferta se encuentra <strong>Cerrada</strong> debido a que ha expirado su cronograma límite. Si desea reactivarla, extienda la fecha y hora de cierre a un momento futuro y seleccione el estado "Publicada".
+        </span>
+      </div>
+
       <!-- SECCIÓN 1: INFORMACIÓN BÁSICA (PRECARGADA) -->
       <div class="card card-custom mb-4">
         <div class="card-custom-header d-flex justify-content-between align-items-center">
@@ -377,10 +385,16 @@ const onPresupuestoPaste = (event) => {
 };
 
 const errorCronograma = computed(() => {
-  const { fecha_inicio, hora_inicio, fecha_cierre, hora_cierre } = form.value;
+  const { fecha_inicio, hora_inicio, fecha_cierre, hora_cierre, estado } = form.value;
   if (!fecha_inicio || !hora_inicio || !fecha_cierre || !hora_cierre) return null;
   if (fecha_cierre < fecha_inicio) return 'La fecha de cierre no puede ser menor a la fecha de inicio.';
   if (fecha_inicio === fecha_cierre && hora_cierre <= hora_inicio) return 'Si las fechas coinciden, la hora de cierre debe ser mayor a la de inicio.';
+  if (estado === 'Publicada') {
+    const fechaHoraCierre = new Date(`${fecha_cierre}T${hora_cierre.length === 5 ? hora_cierre + ':00' : hora_cierre}`);
+    if (!isNaN(fechaHoraCierre) && fechaHoraCierre <= new Date()) {
+      return 'Para mantener o cambiar la oferta a "Publicada", la fecha y hora de cierre deben ser posteriores al momento actual.';
+    }
+  }
   return null;
 });
 

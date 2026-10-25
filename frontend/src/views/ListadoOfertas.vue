@@ -138,9 +138,13 @@
                 </td>
                 <td class="text-center">
                   <span class="badge-status-pill" 
-                        :class="oferta.estado === 'Publicada' || oferta.estado === 'Activo' ? 'status-active' : 'status-inactive'">
+                        :class="obtenerEstado(oferta) === 'Publicada' || obtenerEstado(oferta) === 'Activo' 
+                          ? 'status-active' 
+                          : obtenerEstado(oferta) === 'Cerrada' 
+                            ? 'status-closed' 
+                            : 'status-inactive'">
                     <span class="status-dot"></span>
-                    {{ oferta.estado }}
+                    {{ obtenerEstado(oferta) }}
                   </span>
                 </td>
                 <td class="text-center pe-4">
@@ -208,8 +212,11 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 import api from '../services/api';
+
+const ahora = ref(new Date());
+let timerAhora = null;
 
 const ofertas = ref([]);
 const loading = ref(false);
@@ -268,6 +275,19 @@ const formatearFecha = (str) => {
   return str.split('T')[0];
 };
 
+const obtenerEstado = (oferta) => {
+  if (!oferta) return '';
+  if (oferta.estado === 'Publicada' && oferta.fecha_cierre && oferta.hora_cierre) {
+    const fecha = oferta.fecha_cierre.split('T')[0];
+    const hora = oferta.hora_cierre.length === 5 ? oferta.hora_cierre + ':00' : oferta.hora_cierre.substring(0, 8);
+    const limite = new Date(`${fecha}T${hora}`);
+    if (!isNaN(limite) && ahora.value >= limite) {
+      return 'Cerrada';
+    }
+  }
+  return oferta.estado;
+};
+
 watch(filters, () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
@@ -277,6 +297,15 @@ watch(filters, () => {
 
 onMounted(() => {
   cargarOfertas(1);
+  timerAhora = setInterval(() => {
+    ahora.value = new Date();
+  }, 3000);
+});
+
+onUnmounted(() => {
+  if (timerAhora) {
+    clearInterval(timerAhora);
+  }
 });
 </script>
 
@@ -324,6 +353,16 @@ onMounted(() => {
 
 .status-active .status-dot {
   background-color: #10b981;
+}
+
+.status-closed {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.status-closed .status-dot {
+  background-color: #ef4444;
 }
 
 .status-inactive {

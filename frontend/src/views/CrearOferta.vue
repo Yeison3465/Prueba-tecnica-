@@ -304,6 +304,10 @@ const errorCronograma = computed(() => {
   if (fecha_inicio === fecha_cierre && hora_cierre <= hora_inicio) {
     return 'Si las fechas coinciden, la hora de cierre debe ser mayor a la de inicio.';
   }
+  const fechaHoraCierre = new Date(`${fecha_cierre}T${hora_cierre.length === 5 ? hora_cierre + ':00' : hora_cierre}`);
+  if (!isNaN(fechaHoraCierre) && fechaHoraCierre <= new Date()) {
+    return 'La fecha y hora de cierre deben ser posteriores al momento actual.';
+  }
   return null;
 });
 
