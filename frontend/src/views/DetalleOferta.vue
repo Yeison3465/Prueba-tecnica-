@@ -52,7 +52,7 @@
                 <i class="fa-solid fa-calendar-days me-1 small"></i> Cronograma
               </button>
             </li>
-            <li class="nav-item">
+            <li class="nav-item ">
               <button class="nav-link border-0 fw-semibold px-3 py-2 tab-btn-minimal d-flex align-items-center gap-2" 
                       :class="{ 'tab-active': activeTab === 'documentos' }" 
                       @click="activeTab = 'documentos'">
