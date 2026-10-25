@@ -11,7 +11,7 @@ class Actividad extends Model
 
     protected $fillable = [
         'codigo_segmento',
-        'Segmento',
+        'segmento',
         'codigo_familia',
         'familia',
         'codigo_clase',
@@ -19,6 +19,16 @@ class Actividad extends Model
         'codigo_producto',
         'producto',
     ];
+
+    /**
+     * Compatibilidad dual para permitir tanto $actividad->segmento como $actividad->Segmento
+     */
+    protected $appends = ['Segmento'];
+
+    public function getSegmentoAttribute()
+    {
+        return $this->attributes['segmento'] ?? $this->attributes['Segmento'] ?? null;
+    }
 
     public function ofertas()
     {

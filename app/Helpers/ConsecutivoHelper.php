@@ -11,14 +11,19 @@ class ConsecutivoHelper
      * PO-{3 ceros a la izquierda}{incremental}-{añoEn2Digitos}
      * Ejemplo: PO-0001-26 o O-0001-25
      */
-    public static function generar(string $prefijo = 'PO'): string
+    public static function generar(string $prefijo = 'PO', bool $lock = false): string
     {
         $year = date('y'); // Año actual en 2 dígitos, ej. "26"
 
         // Buscar el último registro cuyo consecutivo termine en el año actual
-        $ultimo = Oferta::where('consecutivo', 'LIKE', "%-{$year}")
-            ->orderBy('id', 'desc')
-            ->first();
+        $query = Oferta::where('consecutivo', 'LIKE', "%-{$year}")
+            ->orderBy('id', 'desc');
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        $ultimo = $query->first();
 
         $incremental = 1;
 

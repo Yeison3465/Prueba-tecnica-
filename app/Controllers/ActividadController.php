@@ -17,7 +17,7 @@ class ActividadController extends BaseController
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('producto', 'LIKE', "%{$search}%")
-                  ->orWhere('Segmento', 'LIKE', "%{$search}%")
+                  ->orWhere('segmento', 'LIKE', "%{$search}%")
                   ->orWhere('familia', 'LIKE', "%{$search}%")
                   ->orWhere('clase', 'LIKE', "%{$search}%")
                   ->orWhere('codigo_producto', 'LIKE', "%{$search}%");
@@ -28,7 +28,7 @@ class ActividadController extends BaseController
         $actividades = $query->limit(300)->get([
             'id',
             'codigo_segmento',
-            'Segmento',
+            'segmento',
             'codigo_familia',
             'familia',
             'codigo_clase',

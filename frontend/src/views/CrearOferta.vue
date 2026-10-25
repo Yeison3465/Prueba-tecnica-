@@ -97,6 +97,9 @@
                        v-model="form.presupuesto" 
                        class="form-control border-start-0" 
                        :class="{ 'is-invalid': form.presupuesto !== '' && !isPresupuestoValido }"
+                       @keydown="onPresupuestoKeydown"
+                       @input="onPresupuestoInput"
+                       @paste="onPresupuestoPaste"
                        placeholder="0.00" 
                        required />
               </div>
@@ -116,7 +119,7 @@
                   {{ loadingActividades ? 'Consultando catálogo UNSPSC...' : '-- Seleccione una actividad del catálogo --' }}
                 </option>
                 <option v-for="act in actividades" :key="act.id" :value="act.id">
-                  {{ act.producto }} ({{ act.codigo_producto }}) &mdash; {{ act.Segmento }}
+                  {{ act.producto }} ({{ act.codigo_producto }}) &mdash; {{ act.segmento || act.Segmento }}
                 </option>
               </select>
               <div class="form-text small text-muted" v-if="loadingActividades">
@@ -240,6 +243,52 @@ const isPresupuestoValido = computed(() => {
   if (!val || !/^\d+(\.\d{1,2})?$/.test(val)) return false;
   return parseFloat(val) > 0;
 });
+
+const onPresupuestoKeydown = (event) => {
+  const allowedKeys = ['Backspace', 'Tab', 'Enter', 'Escape', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+  if (allowedKeys.includes(event.key)) {
+    return;
+  }
+  if (event.ctrlKey || event.metaKey) {
+    return;
+  }
+  if (event.key === '.' || event.key === ',') {
+    const currentVal = String(form.value.presupuesto || '');
+    if (currentVal.includes('.')) {
+      event.preventDefault();
+    }
+    return;
+  }
+  if (!/^\d$/.test(event.key)) {
+    event.preventDefault();
+  }
+};
+
+const onPresupuestoInput = (event) => {
+  let val = String(event.target.value || '').replace(',', '.').replace(/[^0-9.]/g, '');
+  const parts = val.split('.');
+  if (parts.length > 2) {
+    val = parts[0] + '.' + parts.slice(1).join('');
+  }
+  if (parts.length === 2 && parts[1].length > 2) {
+    val = parts[0] + '.' + parts[1].substring(0, 2);
+  }
+  form.value.presupuesto = val;
+};
+
+const onPresupuestoPaste = (event) => {
+  event.preventDefault();
+  const pasted = (event.clipboardData || window.clipboardData).getData('text');
+  let val = pasted.replace(',', '.').replace(/[^0-9.]/g, '');
+  const parts = val.split('.');
+  if (parts.length > 2) {
+    val = parts[0] + '.' + parts.slice(1).join('');
+  }
+  if (parts.length === 2 && parts[1].length > 2) {
+    val = parts[0] + '.' + parts[1].substring(0, 2);
+  }
+  form.value.presupuesto = val;
+};
 
 const isActividadValida = computed(() => {
   return form.value.actividad_id !== '' && form.value.actividad_id !== null;

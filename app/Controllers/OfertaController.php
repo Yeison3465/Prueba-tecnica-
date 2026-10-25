@@ -6,6 +6,7 @@ use App\Models\Oferta;
 use App\Models\OfertaDocumento;
 use App\Core\Validator;
 use App\Helpers\ConsecutivoHelper;
+use Illuminate\Database\Capsule\Manager as Capsule;
 
 class OfertaController extends BaseController
 {
@@ -76,34 +77,76 @@ class OfertaController extends BaseController
             ], 422);
         }
 
-        try {
-            // Generar consecutivo automático: PO-0001-26
-            $consecutivo = ConsecutivoHelper::generar();
+        $maxRetries = 3;
+        $oferta = null;
+        $consecutivo = '';
 
-            $oferta = Oferta::create([
-                'consecutivo'   => $consecutivo,
-                'objeto'        => trim($data['objeto']),
-                'descripcion'   => trim($data['descripcion']),
-                'moneda'        => strtoupper(trim($data['moneda'])),
-                'presupuesto'   => floatval($data['presupuesto']),
-                'actividad_id'  => intval($data['actividad_id']),
-                'fecha_inicio'  => $data['fecha_inicio'],
-                'hora_inicio'   => $data['hora_inicio'],
-                'fecha_cierre'  => $data['fecha_cierre'],
-                'hora_cierre'   => $data['hora_cierre'],
-                'estado'        => $data['estado'] ?? 'Publicada',
-            ]);
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            try {
+                $oferta = Capsule::connection()->transaction(function () use ($data, &$consecutivo) {
+                    $isMysql = Capsule::connection()->getDriverName() === 'mysql';
+                    if ($isMysql) {
+                        Capsule::select("SELECT GET_LOCK('oferta_consecutivo_lock', 10)");
+                    }
 
-            $this->jsonResponse([
-                'success' => true,
-                'message' => "Oferta creada exitosamente con consecutivo {$consecutivo}.",
-                'data'    => $oferta
-            ], 201);
-        } catch (\Throwable $e) {
-            $this->jsonResponse([
-                'success' => false,
-                'message' => 'Error al guardar la oferta en el servidor: ' . $e->getMessage()
-            ], 500);
+                    try {
+                        // Generar consecutivo dentro de la transacción con bloqueo pesimista
+                        $consecutivo = ConsecutivoHelper::generar('PO', true);
+
+                        return Oferta::create([
+                            'consecutivo'   => $consecutivo,
+                            'objeto'        => trim($data['objeto']),
+                            'descripcion'   => trim($data['descripcion']),
+                            'moneda'        => strtoupper(trim($data['moneda'])),
+                            'presupuesto'   => floatval($data['presupuesto']),
+                            'actividad_id'  => intval($data['actividad_id']),
+                            'fecha_inicio'  => $data['fecha_inicio'],
+                            'hora_inicio'   => $data['hora_inicio'],
+                            'fecha_cierre'  => $data['fecha_cierre'],
+                            'hora_cierre'   => $data['hora_cierre'],
+                            'estado'        => $data['estado'] ?? 'Publicada',
+                        ]);
+                    } finally {
+                        if ($isMysql) {
+                            Capsule::select("SELECT RELEASE_LOCK('oferta_consecutivo_lock')");
+                        }
+                    }
+                });
+
+                $this->jsonResponse([
+                    'success' => true,
+                    'message' => "Oferta creada exitosamente con consecutivo {$consecutivo}.",
+                    'data'    => $oferta
+                ], 201);
+                return;
+            } catch (\Throwable $e) {
+                // Si es error de clave foránea en actividad_id (1452)
+                $isFkError = str_contains($e->getMessage(), '1452') || str_contains($e->getMessage(), 'foreign key constraint fails');
+                if ($isFkError) {
+                    $this->jsonResponse([
+                        'success' => false,
+                        'message' => 'Errores de validación en el formulario.',
+                        'errors'  => [
+                            'actividad_id' => 'La actividad seleccionada no existe en el clasificador de bienes y servicios (UNSPSC).'
+                        ]
+                    ], 422);
+                    return;
+                }
+
+                // Si es colisión de concurrencia en consecutivo (Duplicate entry) y quedan intentos
+                $isDuplicate = str_contains($e->getMessage(), '23000') || str_contains($e->getMessage(), '1062');
+                if ($isDuplicate && $attempt < $maxRetries) {
+                    usleep(150000); // 150ms
+                    continue;
+                }
+
+                error_log("Error interno en OfertaController::store: " . $e->getMessage());
+                $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'Ocurrió un error interno en el servidor al guardar la oferta. Por favor intente más tarde.'
+                ], 500);
+                return;
+            }
         }
     }
 
@@ -199,9 +242,22 @@ class OfertaController extends BaseController
                 'data'    => $oferta->fresh(['actividad', 'documentos'])
             ]);
         } catch (\Throwable $e) {
+            $isFkError = str_contains($e->getMessage(), '1452') || str_contains($e->getMessage(), 'foreign key constraint fails');
+            if ($isFkError) {
+                $this->jsonResponse([
+                    'success' => false,
+                    'message' => 'Errores de validación en el formulario.',
+                    'errors'  => [
+                        'actividad_id' => 'La actividad seleccionada no existe en el clasificador de bienes y servicios (UNSPSC).'
+                    ]
+                ], 422);
+                return;
+            }
+
+            error_log("Error interno en OfertaController::update: " . $e->getMessage());
             $this->jsonResponse([
                 'success' => false,
-                'message' => 'Error al actualizar la oferta: ' . $e->getMessage()
+                'message' => 'Ocurrió un error interno en el servidor al actualizar la oferta.'
             ], 500);
         }
     }
@@ -250,9 +306,10 @@ class OfertaController extends BaseController
                 'data'    => $doc
             ], 201);
         } catch (\Throwable $e) {
+            error_log("Error interno en OfertaController::uploadDocumento: " . $e->getMessage());
             $this->jsonResponse([
                 'success' => false,
-                'message' => 'Error al guardar el archivo: ' . $e->getMessage()
+                'message' => 'Ocurrió un error interno en el servidor al procesar el archivo adjunto.'
             ], 500);
         }
     }

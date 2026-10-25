@@ -90,7 +90,7 @@
                       </div>
                       <div class="row g-2 small text-muted">
                         <div class="col-md-4">
-                          <strong>Segmento:</strong> {{ oferta.actividad.Segmento }} ({{ oferta.actividad.codigo_segmento }})
+                          <strong>Segmento:</strong> {{ oferta.actividad.segmento || oferta.actividad.Segmento }} ({{ oferta.actividad.codigo_segmento }})
                         </div>
                         <div class="col-md-4">
                           <strong>Familia:</strong> {{ oferta.actividad.familia }} ({{ oferta.actividad.codigo_familia }})

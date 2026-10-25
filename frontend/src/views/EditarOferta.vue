@@ -96,6 +96,9 @@
                        v-model="form.presupuesto" 
                        class="form-control border-start-0" 
                        :class="{ 'is-invalid': form.presupuesto !== '' && !isPresupuestoValido }"
+                       @keydown="onPresupuestoKeydown"
+                       @input="onPresupuestoInput"
+                       @paste="onPresupuestoPaste"
                        required />
               </div>
             </div>
@@ -326,6 +329,52 @@ const isPresupuestoValido = computed(() => {
   const val = String(form.value.presupuesto).trim();
   return val && /^\d+(\.\d{1,2})?$/.test(val) && parseFloat(val) > 0;
 });
+
+const onPresupuestoKeydown = (event) => {
+  const allowedKeys = ['Backspace', 'Tab', 'Enter', 'Escape', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+  if (allowedKeys.includes(event.key)) {
+    return;
+  }
+  if (event.ctrlKey || event.metaKey) {
+    return;
+  }
+  if (event.key === '.' || event.key === ',') {
+    const currentVal = String(form.value.presupuesto || '');
+    if (currentVal.includes('.')) {
+      event.preventDefault();
+    }
+    return;
+  }
+  if (!/^\d$/.test(event.key)) {
+    event.preventDefault();
+  }
+};
+
+const onPresupuestoInput = (event) => {
+  let val = String(event.target.value || '').replace(',', '.').replace(/[^0-9.]/g, '');
+  const parts = val.split('.');
+  if (parts.length > 2) {
+    val = parts[0] + '.' + parts.slice(1).join('');
+  }
+  if (parts.length === 2 && parts[1].length > 2) {
+    val = parts[0] + '.' + parts[1].substring(0, 2);
+  }
+  form.value.presupuesto = val;
+};
+
+const onPresupuestoPaste = (event) => {
+  event.preventDefault();
+  const pasted = (event.clipboardData || window.clipboardData).getData('text');
+  let val = pasted.replace(',', '.').replace(/[^0-9.]/g, '');
+  const parts = val.split('.');
+  if (parts.length > 2) {
+    val = parts[0] + '.' + parts.slice(1).join('');
+  }
+  if (parts.length === 2 && parts[1].length > 2) {
+    val = parts[0] + '.' + parts[1].substring(0, 2);
+  }
+  form.value.presupuesto = val;
+};
 
 const errorCronograma = computed(() => {
   const { fecha_inicio, hora_inicio, fecha_cierre, hora_cierre } = form.value;

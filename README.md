@@ -105,7 +105,7 @@ composer install
      mysql -u root -p < bd/schema.sql
      mysql -u root -p licitaciones_db < bd/actividades_seed.sql
      ```
-3. Si su MySQL tiene una contraseña distinta a vacío `""` o usuario diferente a `root`, ajústelo en [config/database.php](config/database.php).
+3. Si su servidor MySQL tiene credenciales específicas (contraseña, usuario, host o puerto diferente), puede crear un archivo `.env` a partir de [.env.example](.env.example) o ajustarlas en [config/database.php](config/database.php).
 
 ### 4. Iniciar el Servidor de Desarrollo
 Puede iniciar el servidor web embebido de PHP apuntando a la carpeta `public`:

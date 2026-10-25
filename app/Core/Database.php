@@ -16,6 +16,8 @@ class Database
             return;
         }
 
+        self::loadEnv();
+
         $config = require __DIR__ . '/../../config/database.php';
 
         $capsule = new Capsule;
@@ -42,5 +44,38 @@ class Database
         $capsule->bootEloquent();
 
         self::$booted = true;
+    }
+
+    /**
+     * Carga variables de entorno desde un archivo .env si existe.
+     * Implementación nativa ligera sin dependencias de terceros.
+     */
+    public static function loadEnv(?string $filePath = null): void
+    {
+        $file = $filePath ?: dirname(__DIR__, 2) . '/.env';
+        if (!file_exists($file) || !is_readable($file)) {
+            return;
+        }
+
+        $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+
+            if (str_contains($line, '=')) {
+                [$key, $val] = explode('=', $line, 2);
+                $key = trim($key);
+                $val = trim($val);
+                $val = trim($val, "\"'");
+
+                if (!empty($key)) {
+                    putenv("{$key}={$val}");
+                    $_ENV[$key] = $val;
+                    $_SERVER[$key] = $val;
+                }
+            }
+        }
     }
 }

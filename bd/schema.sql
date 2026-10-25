@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS actividades;
 CREATE TABLE actividades (
     id INT AUTO_INCREMENT PRIMARY KEY,
     codigo_segmento INT NOT NULL,
-    Segmento VARCHAR(200) NOT NULL,
+    segmento VARCHAR(200) NOT NULL,
     codigo_familia INT NOT NULL,
     familia VARCHAR(200) NOT NULL,
     codigo_clase INT NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE actividades (
     codigo_producto INT NOT NULL,
     producto VARCHAR(200) NOT NULL,
     INDEX idx_producto (producto(150)),
-    INDEX idx_segmento (Segmento(100)),
+    INDEX idx_segmento (segmento(100)),
     INDEX idx_codigo_producto (codigo_producto)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

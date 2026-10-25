@@ -2,6 +2,8 @@
 
 namespace App\Core;
 
+use App\Models\Actividad;
+
 class Validator
 {
     private array $errors = [];
@@ -45,10 +47,19 @@ class Validator
             }
         }
 
-        // 5. Actividad: Obligatorio, ID numérico
+        // 5. Actividad: Obligatorio, ID numérico y debe existir en base de datos
         $actividadId = $data['actividad_id'] ?? null;
         if (empty($actividadId) || !is_numeric($actividadId)) {
             $this->errors['actividad_id'] = 'Debe seleccionar una actividad válida del clasificador de bienes y servicios.';
+        } else {
+            try {
+                Database::init();
+                if (!Actividad::where('id', intval($actividadId))->exists()) {
+                    $this->errors['actividad_id'] = 'La actividad seleccionada no existe en el clasificador de bienes y servicios (UNSPSC).';
+                }
+            } catch (\Throwable $e) {
+                $this->errors['actividad_id'] = 'No se pudo verificar la existencia de la actividad seleccionada.';
+            }
         }
 
         // 6. Fechas y Horas (Cronograma)
@@ -115,12 +126,82 @@ class Validator
             return false;
         }
 
+        $tmpPath = $fileData['tmp_name'];
+        if (!file_exists($tmpPath) || !is_readable($tmpPath)) {
+            $this->errors['archivo'] = 'No se puede acceder al archivo temporal cargado.';
+            return false;
+        }
+
         $extension = strtolower(pathinfo($fileData['name'], PATHINFO_EXTENSION));
         $allowedExtensions = ['pdf', 'zip'];
 
         if (!in_array($extension, $allowedExtensions, true)) {
             $this->errors['archivo'] = 'Formato no permitido. Solo se permiten archivos PDF o ZIP.';
             return false;
+        }
+
+        // Inspección de Magic Bytes (Firmas binarias de cabecera)
+        $handle = @fopen($tmpPath, 'rb');
+        $headerBytes = $handle ? fread($handle, 8) : '';
+        if ($handle) {
+            fclose($handle);
+        }
+
+        // Detección y bloqueo inmediato de ejecutables DOS/Windows (MZ header)
+        if (str_starts_with($headerBytes, "MZ")) {
+            $this->errors['archivo'] = 'Archivo no permitido: se detectó un archivo ejecutable binario.';
+            return false;
+        }
+
+        // Detección y bloqueo inmediato de scripts PHP
+        if (str_starts_with($headerBytes, "<?php") || str_starts_with($headerBytes, "<?=")) {
+            $this->errors['archivo'] = 'Archivo no permitido: se detectó un script ejecutable.';
+            return false;
+        }
+
+        // Validación específica por formato mediante Magic Bytes
+        if ($extension === 'pdf') {
+            if (!str_starts_with($headerBytes, "%PDF")) {
+                $this->errors['archivo'] = 'El archivo no es un documento PDF auténtico (cabecera corrupta o inválida).';
+                return false;
+            }
+        } elseif ($extension === 'zip') {
+            $validZip = str_starts_with($headerBytes, "PK\x03\x04")
+                     || str_starts_with($headerBytes, "PK\x05\x06")
+                     || str_starts_with($headerBytes, "PK\x07\x08");
+            if (!$validZip) {
+                $this->errors['archivo'] = 'El archivo no es un comprimido ZIP auténtico.';
+                return false;
+            }
+        }
+
+        // Inspección de MIME Type real mediante finfo_file
+        if (extension_loaded('fileinfo')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo ? finfo_file($finfo, $tmpPath) : false;
+            if ($finfo) {
+                finfo_close($finfo);
+            }
+
+            if ($mimeType) {
+                $allowedPdfMimes = ['application/pdf', 'application/x-pdf'];
+                $allowedZipMimes = [
+                    'application/zip',
+                    'application/x-zip-compressed',
+                    'application/x-zip',
+                    'multipart/x-zip',
+                    'application/octet-stream'
+                ];
+
+                if ($extension === 'pdf' && !in_array($mimeType, $allowedPdfMimes, true)) {
+                    $this->errors['archivo'] = "Tipo MIME inválido ({$mimeType}). Se esperaba application/pdf.";
+                    return false;
+                }
+                if ($extension === 'zip' && !in_array($mimeType, $allowedZipMimes, true)) {
+                    $this->errors['archivo'] = "Tipo MIME inválido ({$mimeType}). Se esperaba application/zip.";
+                    return false;
+                }
+            }
         }
 
         // Validar tamaño máximo (ej. 20MB)
