@@ -60,3 +60,25 @@ php -S localhost:8000 -t public
 
 Luego abra su navegador web en:
 👉 **http://localhost:8000** (o **http://localhost:8000/ofertas**)
+
+> **Nota sobre el Frontend:** La SPA de Vue.js 3 ya se encuentra previamente compilada en `public/dist/`, por lo que **no es obligatorio tener Node.js instalado** para evaluar el proyecto.
+> 
+> Si desea ejecutar el frontend en modo desarrollo con recarga en vivo (HMR):
+> ```bash
+> cd frontend
+> npm install
+> npm run dev
+> ```
+
+---
+
+## 📋 Requisitos de la Prueba Implementados
+
+1. **Gestión de Licitaciones (CRUD):** Creación, listado con filtros, edición y vista de detalle.
+2. **Consecutivo Automático y Concurrente:** Formato `PO-XXXX-AA` (ej. `PO-0001-26`) con control de concurrencia pesimista (`GET_LOCK`) y reintentos automáticos.
+3. **Catálogo UNSPSC:** Búsqueda autocompletable con debounce conectada a más de 3.000 actividades clasificadas por segmento, familia, clase y producto.
+4. **Control de Cronograma y Cierre Automático:** Validación estricta de fechas/horas y transición automática de estado a `Cerrada` al vencer el plazo límite.
+5. **Gestión Documental:** Carga y validación exclusiva de archivos PDF o ZIP (hasta 10 MB) con almacenamiento seguro y nombres con hash criptográfico.
+6. **Regla Obligatoria en Edición:** Validación dual (frontend y backend) que exige al menos un documento adjunto para permitir el guardado.
+7. **Exportación a Excel:** Generación nativa con `PhpSpreadsheet` respetando los filtros de búsqueda y omitiendo la paginación.
+
