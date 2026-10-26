@@ -108,22 +108,16 @@
               </div>
             </div>
 
-            <!-- Actividad UNSPSC -->
+            <!-- Actividad UNSPSC con Buscador Interactivo -->
             <div class="col-md-5">
               <label class="form-label">Actividad (Clasificador UNSPSC) <span class="text-danger">*</span></label>
-              <select v-model="form.actividad_id" 
-                      class="form-select" 
-                      :disabled="loadingActividades" 
-                      required>
-                <option value="" disabled>
-                  {{ loadingActividades ? 'Consultando catálogo UNSPSC...' : '-- Seleccione una actividad del catálogo --' }}
-                </option>
-                <option v-for="act in actividades" :key="act.id" :value="act.id">
-                  {{ act.producto }} ({{ act.codigo_producto }}) &mdash; {{ act.segmento || act.Segmento }}
-                </option>
-              </select>
-              <div class="form-text small text-muted" v-if="loadingActividades">
-                <i class="fa-solid fa-spinner fa-spin text-cyan me-1"></i> Cargando base de datos UNSPSC...
+              <BuscadorActividad 
+                v-model="form.actividad_id" 
+                :disabled="guardando"
+                placeholder="Buscar por producto, código UNSPSC o segmento..."
+              />
+              <div class="form-text small text-muted">
+                <i class="fa-solid fa-circle-info text-cyan me-1"></i> Buscador en vivo del catálogo UNSPSC (búsqueda por texto o código).
               </div>
             </div>
           </div>
@@ -204,10 +198,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
 import Swal from 'sweetalert2';
+import BuscadorActividad from '../components/BuscadorActividad.vue';
 
 const router = useRouter();
 
@@ -326,20 +321,6 @@ const isFormValido = computed(() => {
   );
 });
 
-const cargarActividades = async () => {
-  loadingActividades.value = true;
-  try {
-    const res = await api.get('/actividades');
-    if (res.data.success) {
-      actividades.value = res.data.data;
-    }
-  } catch (err) {
-    console.error('Error al cargar actividades:', err);
-  } finally {
-    loadingActividades.value = false;
-  }
-};
-
 const guardarOferta = async () => {
   if (!isFormValido.value) return;
 
@@ -368,8 +349,4 @@ const guardarOferta = async () => {
     guardando.value = false;
   }
 };
-
-onMounted(() => {
-  cargarActividades();
-});
 </script>

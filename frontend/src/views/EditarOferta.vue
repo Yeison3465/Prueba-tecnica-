@@ -122,13 +122,16 @@
             </div>
 
             <div class="col-md-4">
-              <label class="form-label">Actividad UNSPSC <span class="text-danger">*</span></label>
-              <select v-model="form.actividad_id" class="form-select" :disabled="loadingActividades" required>
-                <option value="" disabled>-- Seleccione una actividad --</option>
-                <option v-for="act in actividades" :key="act.id" :value="act.id">
-                  {{ act.producto }} ({{ act.codigo_producto }})
-                </option>
-              </select>
+              <label class="form-label">Actividad (Clasificador UNSPSC) <span class="text-danger">*</span></label>
+              <BuscadorActividad 
+                v-model="form.actividad_id" 
+                :actividad-inicial="actividadInicial"
+                :disabled="guardando"
+                placeholder="Buscar por producto, código UNSPSC o segmento..."
+              />
+              <div class="form-text small text-muted">
+                <i class="fa-solid fa-circle-info text-cyan me-1"></i> Buscador interactivo en vivo del catálogo UNSPSC.
+              </div>
             </div>
           </div>
         </div>
@@ -300,6 +303,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
 import ModalDocumento from '../components/ModalDocumento.vue';
+import BuscadorActividad from '../components/BuscadorActividad.vue';
 import Swal from 'sweetalert2';
 
 const props = defineProps({
@@ -326,9 +330,10 @@ const form = ref({
 });
 
 const actividades = ref([]);
+const actividadInicial = ref(null);
 const documentos = ref([]);
 const loading = ref(true);
-const loadingActividades = ref(true);
+const loadingActividades = ref(false);
 const guardando = ref(false);
 
 const isObjetoValido = computed(() => form.value.objeto.trim().length > 0 && form.value.objeto.length <= 150);
@@ -421,6 +426,7 @@ const cargarDatos = async () => {
       form.value.moneda       = d.moneda;
       form.value.presupuesto  = d.presupuesto;
       form.value.actividad_id = d.actividad_id;
+      actividadInicial.value  = d.actividad || null;
       form.value.fecha_inicio = d.fecha_inicio?.split('T')[0] || '';
       form.value.hora_inicio  = d.hora_inicio?.substring(0, 5) || '08:00';
       form.value.fecha_cierre = d.fecha_cierre?.split('T')[0] || '';
@@ -532,7 +538,6 @@ const actualizarOferta = async () => {
 };
 
 onMounted(() => {
-  cargarActividades();
   cargarDatos();
 });
 </script>

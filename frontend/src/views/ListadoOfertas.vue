@@ -37,7 +37,7 @@
             </span>
           </div>
 
-          <button v-if="filters.consecutivo || filters.objeto || filters.descripcion" 
+          <button v-if="filters.consecutivo || filters.objeto || filters.descripcion || filters.actividad" 
                   @click="limpiarFiltros" 
                   class="btn btn-link btn-sm text-danger text-decoration-none p-0 small fw-semibold">
             <i class="fa-solid fa-rotate-left me-1"></i> Limpiar filtros
@@ -58,7 +58,7 @@
             </div>
           </div>
 
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label class="form-label">Objeto de la Oferta</label>
             <div class="input-group">
               <span class="input-group-text bg-white text-muted border-end-0 small">
@@ -67,11 +67,24 @@
               <input type="text" 
                      v-model="filters.objeto" 
                      class="form-control border-start-0" 
-                     placeholder="Filtrar por palabra clave..." />
+                     placeholder="Filtrar por objeto..." />
             </div>
           </div>
 
-          <div class="col-md-5">
+          <div class="col-md-3">
+            <label class="form-label">Buscador de Actividad (UNSPSC)</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white text-muted border-end-0 small">
+                <i class="fa-solid fa-tag text-cyan small"></i>
+              </span>
+              <input type="text" 
+                     v-model="filters.actividad" 
+                     class="form-control border-start-0" 
+                     placeholder="Filtrar por producto o código..." />
+            </div>
+          </div>
+
+          <div class="col-md-3">
             <label class="form-label">Descripción / Alcance</label>
             <div class="input-group">
               <span class="input-group-text bg-white text-muted border-end-0 small">
@@ -80,7 +93,7 @@
               <input type="text" 
                      v-model="filters.descripcion" 
                      class="form-control border-start-0" 
-                     placeholder="Filtrar por condiciones, alcance..." />
+                     placeholder="Filtrar por alcance..." />
             </div>
           </div>
         </div>
@@ -231,6 +244,7 @@ const filters = ref({
   consecutivo: '',
   objeto: '',
   descripcion: '',
+  actividad: '',
 });
 
 let debounceTimer = null;
@@ -245,6 +259,7 @@ const cargarOfertas = async (page = 1) => {
         consecutivo: filters.value.consecutivo,
         objeto: filters.value.objeto,
         descripcion: filters.value.descripcion,
+        actividad: filters.value.actividad,
       },
     });
     if (res.data.success) {
@@ -262,6 +277,7 @@ const limpiarFiltros = () => {
   filters.value.consecutivo = '';
   filters.value.objeto = '';
   filters.value.descripcion = '';
+  filters.value.actividad = '';
   cargarOfertas(1);
 };
 

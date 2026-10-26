@@ -29,6 +29,7 @@ class OfertaController extends BaseController
         $consecutivo = trim($_GET['consecutivo'] ?? '');
         $objeto      = trim($_GET['objeto'] ?? '');
         $descripcion = trim($_GET['descripcion'] ?? '');
+        $actividad   = trim($_GET['actividad'] ?? '');
         $page        = max(1, intval($_GET['page'] ?? 1));
         $perPage     = max(1, min(100, intval($_GET['per_page'] ?? 10)));
 
@@ -44,6 +45,14 @@ class OfertaController extends BaseController
 
         if ($descripcion !== '') {
             $query->where('descripcion', 'LIKE', "%{$descripcion}%");
+        }
+
+        if ($actividad !== '') {
+            $query->whereHas('actividad', function ($q) use ($actividad) {
+                $q->where('producto', 'LIKE', "%{$actividad}%")
+                  ->orWhere('codigo_producto', 'LIKE', "%{$actividad}%")
+                  ->orWhere('segmento', 'LIKE', "%{$actividad}%");
+            });
         }
 
         $total = $query->count();

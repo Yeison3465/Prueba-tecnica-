@@ -20,6 +20,7 @@ class ReporteController extends BaseController
         $consecutivo = trim($_GET['consecutivo'] ?? '');
         $objeto      = trim($_GET['objeto'] ?? '');
         $descripcion = trim($_GET['descripcion'] ?? '');
+        $actividad   = trim($_GET['actividad'] ?? '');
 
         Oferta::sincronizarEstadosCierre();
 
@@ -35,6 +36,14 @@ class ReporteController extends BaseController
 
         if ($descripcion !== '') {
             $query->where('descripcion', 'LIKE', "%{$descripcion}%");
+        }
+
+        if ($actividad !== '') {
+            $query->whereHas('actividad', function ($q) use ($actividad) {
+                $q->where('producto', 'LIKE', "%{$actividad}%")
+                  ->orWhere('codigo_producto', 'LIKE', "%{$actividad}%")
+                  ->orWhere('segmento', 'LIKE', "%{$actividad}%");
+            });
         }
 
         $ofertas = $query->get();
