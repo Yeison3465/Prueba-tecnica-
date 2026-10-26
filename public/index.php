@@ -39,7 +39,7 @@ $router->get('/ofertas/editar/{id}', $serveSpa);
 $router->get('/ofertas/detalle/{id}', $serveSpa);
 
 $router->get('/ofertas/exportar-excel', 'ReporteController@exportarExcel');
-$router->get('/ofertas/{id}/documentos/{docId}/descargar', 'OfertaController@downloadDocumento');
+$router->get('/ofertas/{id}/documentos/{docId}/descargar', 'DocumentoController@download');
 
 // ================= Rutas de API JSON =================
 // Actividades UNSPSC
@@ -54,8 +54,8 @@ $router->post('/api/ofertas/{id}', 'OfertaController@update');
 $router->put('/api/ofertas/{id}', 'OfertaController@update');
 
 // Documentos adjuntos
-$router->post('/api/ofertas/{id}/documentos', 'OfertaController@uploadDocumento');
-$router->delete('/api/ofertas/{id}/documentos/{docId}', 'OfertaController@deleteDocumento');
+$router->post('/api/ofertas/{id}/documentos', 'DocumentoController@upload');
+$router->delete('/api/ofertas/{id}/documentos/{docId}', 'DocumentoController@delete');
 
 // Despachar la petición
 $method = $_SERVER['REQUEST_METHOD'];
