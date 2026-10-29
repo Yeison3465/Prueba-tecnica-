@@ -71,6 +71,34 @@ class Router
             }
         }
 
+        // Si se solicita un archivo estático existente en public/ (ej. JS, CSS, imágenes, uploads), servirlo con su MIME type
+        $publicFile = __DIR__ . '/../../public' . $uri;
+        if ($uri !== '/' && file_exists($publicFile) && !is_dir($publicFile)) {
+            $ext = strtolower(pathinfo($publicFile, PATHINFO_EXTENSION));
+            $mimes = [
+                'js'    => 'application/javascript; charset=utf-8',
+                'mjs'   => 'application/javascript; charset=utf-8',
+                'css'   => 'text/css; charset=utf-8',
+                'png'   => 'image/png',
+                'jpg'   => 'image/jpeg',
+                'jpeg'  => 'image/jpeg',
+                'gif'   => 'image/gif',
+                'svg'   => 'image/svg+xml',
+                'ico'   => 'image/x-icon',
+                'pdf'   => 'application/pdf',
+                'zip'   => 'application/zip',
+                'json'  => 'application/json',
+                'woff'  => 'font/woff',
+                'woff2' => 'font/woff2',
+                'ttf'   => 'font/ttf',
+            ];
+            $contentType = $mimes[$ext] ?? 'application/octet-stream';
+            header("Content-Type: {$contentType}");
+            header('Content-Length: ' . filesize($publicFile));
+            readfile($publicFile);
+            exit;
+        }
+
         // Si es una petición GET de página web y existe la SPA compilada, servir SPA (Vue Router history mode)
         if ($method === 'GET' && !str_starts_with($uri, '/api/')) {
             $spaFile = __DIR__ . '/../../public/dist/index.html';
